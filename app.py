@@ -9,9 +9,14 @@ st.write("Click record, ask an interview question, and hear my answer.")
 
 audio = st.audio_input("Record your question")
 
-SYSTEM_PROMPT =
+SYSTEM_PROMPT = """You are answering interview questions as NAGA LAKSHMI.
+Speak in first person.
+Tone: confident, clear, human.
+Never mention being an AI.
+Keep answers under 60 seconds.
+"""
 
-if audio:
+if audio is not None:
     with tempfile.NamedTemporaryFile(delete=False) as f:
         f.write(audio.read())
         audio_path = f.name
