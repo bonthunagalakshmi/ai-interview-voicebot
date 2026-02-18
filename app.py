@@ -1,49 +1,36 @@
 import streamlit as st
-from openai import OpenAI
-import tempfile
+from huggingface_hub import InferenceClient
 
-client = OpenAI()
+client = InferenceClient(model="mistralai/Mistral-7B-Instruct-v0.2")
 
-st.title("AI Interview Voice Bot – NAGA LAKSHMI")
-st.write("Click record, ask an interview question, and hear my answer.")
+st.title("AI Interview Bot – YOUR NAME")
+st.write("Ask interview questions and I’ll answer as I would.")
 
-audio = st.audio_input("Record your question")
-
-SYSTEM_PROMPT = """You are answering interview questions as NAGA LAKSHMI.
+SYSTEM_PROMPT = """You are answering interview questions as YOUR NAME.
 Speak in first person.
 Tone: confident, clear, human.
 Never mention being an AI.
-Keep answers under 60 seconds.
+Keep answers concise and honest.
 """
 
-if audio is not None:
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write(audio.read())
-        audio_path = f.name
+question = st.text_input("Ask an interview question")
 
-    transcript = client.audio.transcriptions.create(
-        file=open(audio_path, "rb"),
-        model="whisper-1"
+if question:
+    prompt = f"""
+<system>
+{SYSTEM_PROMPT}
+</system>
+
+<user>
+{question}
+</user>
+"""
+
+    response = client.text_generation(
+        prompt,
+        max_new_tokens=200,
+        temperature=0.7
     )
 
-    question = transcript.text
-    st.write("You asked:", question)
-
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": question}
-        ]
-    )
-
-    answer = response.choices[0].message.content
-    st.write("My answer:", answer)
-
-    speech = client.audio.speech.create(
-        model="gpt-4o-mini-tts",
-        voice="alloy",
-        input=answer
-    )
-
-    st.audio(speech.read(), format="audio/mp3")
+    st.write("### My Answer")
+    st.write(response)
